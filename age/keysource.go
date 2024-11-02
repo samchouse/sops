@@ -302,12 +302,23 @@ func (key *MasterKey) loadIdentities() (ParsedIdentities, error) {
 	return identities, nil
 }
 
+func cmdParseRecipient(arg string) (age.Recipient, error) {
+	switch {
+	case strings.HasPrefix(arg, "age1") && strings.Count(arg, "1") > 1:
+		return plugin.NewRecipient(arg, tui.PluginTerminalUI)
+	case strings.HasPrefix(arg, "age1"):
+		return age.ParseX25519Recipient(arg)
+	}
+
+	return nil, fmt.Errorf("unknown recipient type: %q", arg)
+}
+
 // parseRecipient attempts to parse a string containing an encoded age public
 // key.
-func parseRecipient(recipient string) (*age.X25519Recipient, error) {
-	parsedRecipient, err := age.ParseX25519Recipient(recipient)
+func parseRecipient(recipient string) (age.Recipient, error) {
+	parsedRecipient, err := cmdParseRecipient(recipient)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse input as Bech32-encoded age public key: %w", err)
+		return nil, fmt.Errorf("failed to parse input as age public key: %w", err)
 	}
 	return parsedRecipient, nil
 }
